@@ -1,0 +1,41 @@
+name: "☀️ Утренний план (07:00 МСК)"
+
+on:
+  schedule:
+    - cron: "0 4 * * *"   # 04:00 UTC = 07:00 МСК
+  workflow_dispatch:        # ручной запуск из GitHub UI
+
+permissions:
+  contents: write
+
+jobs:
+  send-morning:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout репозитория
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Настройка Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Установка зависимостей
+        run: pip install -r requirements.txt
+
+      - name: Отправить утренний план
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID:   ${{ secrets.CHAT_ID }}
+        run: python bot/send_morning.py
+
+      - name: Сохранить обновлённый state в репозиторий
+        run: |
+          git config user.name  "FA Bot"
+          git config user.email "bot@fa-sprint.local"
+          git add state/progress.json
+          git diff --cached --quiet || git commit -m "bot: morning $(date +%Y-%m-%d)"
+          git push

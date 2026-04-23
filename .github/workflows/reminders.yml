@@ -1,0 +1,52 @@
+name: "⏱ Дневные напоминания (09:25 и 14:00 МСК)"
+
+on:
+  schedule:
+    - cron: "25 6 * * *"   # 06:25 UTC = 09:25 МСК
+    - cron: "0 11 * * *"   # 11:00 UTC = 14:00 МСК
+  workflow_dispatch:
+    inputs:
+      slot:
+        description: "midmorning или afternoon"
+        required: true
+        default: midmorning
+        type: choice
+        options: [midmorning, afternoon]
+
+permissions:
+  contents: read
+
+jobs:
+  send-reminder:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Определить слот по времени запуска
+        id: slot
+        run: |
+          # При ручном запуске берём input, иначе определяем по UTC-часу
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "slot=${{ inputs.slot }}" >> $GITHUB_OUTPUT
+          else
+            HOUR=$(date -u +%H)
+            MIN=$(date -u +%M)
+            if [ "$HOUR" = "06" ]; then
+              echo "slot=midmorning" >> $GITHUB_OUTPUT
+            else
+              echo "slot=afternoon" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Отправить напоминание
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID:   ${{ secrets.CHAT_ID }}
+        run: python bot/send_reminder.py ${{ steps.slot.outputs.slot }}

@@ -1,0 +1,49 @@
+name: "💬 Обработчик команд (каждые 30 мин)"
+
+# Запускается каждые 30 минут → слушает команды пользователя 8 минут → останавливается.
+# Это обеспечивает отзывчивость бота без постоянно запущенного сервера.
+# Для публичного репозитория минуты GitHub Actions — бесплатны (unlimited).
+# Для приватного репозитория замените "*/30" на "0 *" (раз в час), чтобы уложиться в 2000 мин/месяц.
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"   # каждые 30 минут
+  workflow_dispatch:          # ручной запуск — для мгновенного ответа на команду
+    inputs:
+      run_seconds:
+        description: "Сколько секунд слушать (по умолчанию 480)"
+        required: false
+        default: "480"
+
+permissions:
+  contents: write
+
+jobs:
+  listen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Запустить обработчик команд
+        env:
+          BOT_TOKEN:   ${{ secrets.BOT_TOKEN }}
+          CHAT_ID:     ${{ secrets.CHAT_ID }}
+          RUN_SECONDS: ${{ inputs.run_seconds || '480' }}
+        run: python bot/interactive.py
+
+      - name: Сохранить обновлённый state
+        run: |
+          git config user.name  "FA Bot"
+          git config user.email "bot@fa-sprint.local"
+          git add state/progress.json
+          git diff --cached --quiet || git commit -m "bot: interactive update $(date +%Y-%m-%d-%H%M)"
+          git push

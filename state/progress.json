@@ -4,5 +4,15 @@
   "current_streak": 0,
   "best_streak": 0,
   "total_days": 0,
-  "logs": {}
+  "logs": {
+    "2026-04-23": {
+      "fa_done": false,
+      "ifrs_done": false,
+      "excel_done": false,
+      "english_done": false,
+      "sport_done": false,
+      "total_done": 0,
+      "skipped": []
+    }
+  }
 }

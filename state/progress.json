@@ -1345,6 +1345,15 @@
       "sport_done": false,
       "total_done": 0,
       "skipped": []
+    },
+    "2026-09-20": {
+      "fa_done": false,
+      "ifrs_done": false,
+      "excel_done": false,
+      "english_done": false,
+      "sport_done": false,
+      "total_done": 0,
+      "skipped": []
     }
   }
 }
